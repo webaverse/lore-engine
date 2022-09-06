@@ -1,0 +1,48 @@
+{
+  "name": "@webaverse/lore-engine",
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "dependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.1.1",
+    "@esbuild-plugins/node-modules-polyfill": "^0.1.4",
+    "@monaco-editor/react": "^4.4.5",
+    "axios": "^0.27.2",
+    "buffer": "^6.0.3",
+    "dotenv": "^16.0.1",
+    "events": "^3.3.0",
+    "jszip": "^3.10.1",
+    "lz-string": "^1.4.4",
+    "module-from-string": "^3.2.1",
+    "openai": "^3.0.0",
+    "path": "^0.12.7",
+    "react": "^18.2.0",
+    "react-dnd": "^14.0.2",
+    "react-dnd-html5-backend": "^14.0.0",
+    "react-dom": "^18.2.0",
+    "react-router": "^6.3.0",
+    "react-router-dom": "^6.3.0",
+    "react-tag-input": "^6.8.0",
+    "require": "^2.4.20",
+    "rollup-plugin-node-builtins": "^2.1.2",
+    "rollup-plugin-node-globals": "^1.4.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "terminal-in-react": "^4.3.1",
+    "unique-names-generator": "^4.7.1",
+    "url": "^0.11.0"
+  },
+  "browser": {
+    "fs": false,
+    "path": false,
+    "os": false
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.17",
+    "@types/react-dom": "^18.0.6",
+    "@vitejs/plugin-react": "^2.0.1",
+    "localstorage-polyfill": "^1.0.1",
+    "vite": "^3.0.7"
+  }
+}
