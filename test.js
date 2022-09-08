@@ -44,6 +44,8 @@ import {
   makeObjectStop,
   makeExpositionStop,
   makeLocationStop,
+  makeReactionPrompt,
+  makeReactionStop,
 } from "./lore-model.js";
 
 const args = process.argv;
@@ -172,7 +174,12 @@ It's more of a floating island but they call it a tree house. Inside the treehou
       description: `A witch. She is a powerful witch. Probably best not to mess with her.`,
     },
   ],
-  messages: [],
+  messages: [
+    {
+      speaker: "scillia",
+      message: "Hey, I found a sword. It looks rusty but it might be useful.",
+    },
+  ],
 };
 
 // get openai key from process.env or args[0]
@@ -650,18 +657,23 @@ const run = async () => {
   async function generateReactionTest() {
     console.log("Starting reaction test");
     const output = await generateReaction(
-      testData.messages[0],
+      testData.messages[0].speaker,
+      testData.messages[0].message,
       makeGenerateFn()
     );
 
     console.log("*********** reaction:");
     console.log(output);
 
-    const prompt = output.prompt;
+    const stop = makeReactionStop(
+      testData.messages[0].speaker,
+      testData.messages[0].message
+    );
+    const prompt = makeReactionPrompt();
 
     delete output.prompt;
 
-    writeData(testData.messages[0], prompt, output.reaction, "reaction");
+    writeData(testData.messages[0], prompt, output.reaction, "reaction", stop);
   }
 
   if (

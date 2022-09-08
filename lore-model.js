@@ -55,7 +55,7 @@ Location: "Orange Fields" A horrible battle was fought here, changing the color 
 Quote: "They say a bloodstain's orange after you wash it three or four times in a tub. Still those fields sound interesting!"
 Location: "Bastards bog" Home to strange creatures and gross insects. Most maps just describe the bog as a place to be avoided.
 Quote: "What a dump. I can't believe anyone would want to live here. The smell is terrible and the people are all dirty. I'm sorry I shouldn't be joking that they're poor."
-Location:`
+Location:`;
 };
 
 export const makeLocationStop = () => ["\n\n", "Location:"];
@@ -136,8 +136,7 @@ export const parseCharacterResponse = (resp) => {
 
   const character = lines[0].split('"');
   const comment =
-    lines[1] &&
-    lines[1].replace("Quote: ", "").replace('"', "").trim();
+    lines[1] && lines[1].replace("Quote: ", "").replace('"', "").trim();
   const name = character[0].replace('"', "").trim();
   const description = character[1].trim();
 
@@ -236,8 +235,7 @@ export const parseObjectResponse = (resp) => {
 
   const obj = lines[0].split('"');
   const comment =
-    lines[1] &&
-    lines[1].replace("Quote: ", "").replace('"', "").trim();
+    lines[1] && lines[1].replace("Quote: ", "").replace('"', "").trim();
   const name = obj[0].replace('"', "").trim();
   const description = obj[1].trim();
 
@@ -256,7 +254,7 @@ export async function generateObject(generateFn) {
 
 // REACTIONS
 
-export const makeReactionPrompt = () => {
+export const makeReactionPrompt = (name, message) => {
   return `\
 Available reactions:
 surprise
@@ -319,18 +317,33 @@ Jake: "What are you doing? (react = surprised)"
 Amy: "I'm looking for my cat. Have you seen her?  react = normal)"
 Options for Jake:[No, I haven't seen your cat. (react =  headShake)], [Yes, I saw your cat go into the treehouse. (react = headNod)] 
 Jake: "No, I haven't seen your cat. (react = headShake)"
-Amy: "Well, if you see her can you let me know? (react = normal)" *END*`
+Amy: "Well, if you see her can you let me know? (react = normal)" *END*
+${name}: "${message}`;
 };
 
-export const makeReactionStop = (name) => ["\n", name + ":"];
+export const makeReactionStop = (name, message) => [
+  "\n",
+  name + ":" + message,
+  name + ":",
+];
 
 export const parseReactionResponse = (resp) => {
-  return { reaction: resp?.replace(/\s+/g, ""), };
+  const reg = /\(([^)]+)\)/;
+  const match = reg.exec(resp);
+  if (match?.length > 1) {
+    match[1] = match[1].replace("react = ", "").replace("reaction = ", "");
+    return { reaction: match[1] };
+  } else {
+    return { reaction: "" };
+  }
 };
 
-export async function generateReaction(name, generateFn) {
+export async function generateReaction(name, message, generateFn) {
   return parseReactionResponse(
-    await generateFn(makeReactionPrompt(), makeReactionStop(name))
+    await generateFn(
+      makeReactionPrompt(name, message),
+      makeReactionStop(name, message)
+    )
   );
 }
 
@@ -397,7 +410,9 @@ ${
 # Transcript
 ${
   messages
-    ? messages.map((m) => ">> " + m.name + ": " + m.message).join("\n") + (messages.length > 0 ? '\n' : '') + ">>"
+    ? messages.map((m) => ">> " + m.name + ": " + m.message).join("\n") +
+      (messages.length > 0 ? "\n" : "") +
+      ">>"
     : ">>"
 }`;
 };
@@ -524,8 +539,7 @@ export const parseExpositionResponse = (resp) => {
 
   const description = lines[0].trim();
   const comment =
-    lines[1] &&
-    lines[1].replaceAll("Quote: ", "").replaceAll('"', "").trim();
+    lines[1] && lines[1].replaceAll("Quote: ", "").replaceAll('"', "").trim();
 
   return {
     description,
@@ -604,8 +618,14 @@ ${
   } as context, write a video game RPG cutscene between the characters.
 
 # Transcript
-${messages ? (messages.map((m) => '>> ' + m?.name + ': ' + m?.message).join("\n")) + (messages.length > 0 ? '\n' : '') + '>>' : '>>'}`
-}
+${
+  messages
+    ? messages.map((m) => ">> " + m?.name + ": " + m?.message).join("\n") +
+      (messages.length > 0 ? "\n" : "") +
+      ">>"
+    : ">>"
+}`;
+};
 
 export const makeCutsceneStop = () => ["\n\n", "done=true", "done = true"];
 
@@ -682,8 +702,8 @@ export const makeRPGDialoguePrompt = ({
   objects = [],
   messages = [],
 }) => {
-  console.log('messages are')
-  console.log(messages)
+  console.log("messages are");
+  console.log(messages);
   return `\
 # Transcript 
 >> Alyx: Just the person I needed. You busy?
@@ -765,20 +785,34 @@ ${
 # Target Character
 "${dstCharacter.name}" ${dstCharacter.description}
 
-(TASK) Using ${objects && objects.length > 0 && objects.map((o) => o.name).join(", ")}${location ? " and " + location.name : ''}\
- as context, write a video game RPG cutscene between the characters${dstCharacter && " and " + dstCharacter.name}.
+(TASK) Using ${
+    objects && objects.length > 0 && objects.map((o) => o.name).join(", ")
+  }${location ? " and " + location.name : ""}\
+ as context, write a video game RPG cutscene between the characters${
+   dstCharacter && " and " + dstCharacter.name
+ }.
 
 # Transcript
-${(messages.map((m) => '>> ' + m.type === 'options' ? ('(OPTIONS): ' + m.options.map(o => `[${o}]`).join(' ')) : m.name + ': ' + m.message).join("\n")) + (messages.length > 0 ? '\n' : '') + '>>'}`
-}
+${
+  messages
+    .map((m) =>
+      ">> " + m.type === "options"
+        ? "(OPTIONS): " + m.options.map((o) => `[${o}]`).join(" ")
+        : m.name + ": " + m.message
+    )
+    .join("\n") +
+  (messages.length > 0 ? "\n" : "") +
+  ">>"
+}`;
+};
 
-export const makeRPGDialogueStop = () => ['END*'];
+export const makeRPGDialogueStop = () => ["END*"];
 
 export const parseRPGDialogueResponse = (resp) => {
   // first, split by line, and remove ">> ", then remove any > or <
   // filter out any line after the first that doesn't start with a >>
-  console.log('resp is', resp)
-  resp = resp.split('\n');
+  console.log("resp is", resp);
+  resp = resp.split("\n");
   const lines = [...resp];
   // for each line, process as a message and add to the returned messages
   const messages = [];
@@ -789,45 +823,54 @@ export const parseRPGDialogueResponse = (resp) => {
       continue;
     }
 
-    if(split[0].length > 30 || split[1].length > 200) {
+    if (split[0].length > 30 || split[1].length > 200) {
       continue;
     }
 
     // if split[0] doesn't start with a >, then continue
-    if (split[0].includes("#") || split[1].includes('>>')) {
+    if (split[0].includes("#") || split[1].includes(">>")) {
       continue;
     }
 
-    split[0] = split[0].replaceAll('>', '').trim()
+    split[0] = split[0].replaceAll(">", "").trim();
 
     const name = split[0].trim();
     const message = split[1].trim();
     // set end to true if any of the last 5 characters in line is a *
-    const end = line.includes('*');
-    if(name.includes('OPTIONS')) {
-      const type = 'options';
+    const end = line.includes("*");
+    if (name.includes("OPTIONS")) {
+      const type = "options";
       // split the message into an array of options, which are plaintext between []
       // example: [that doesn't bother you?] [It's the bite I'm worried about]
-      const options = message.split('[').map((o) => o.split(']')[0].trim()).filter((o) => o.length > 0);
-      console.log('options are', options);
-      messages.push ({ type, options, end });
+      const options = message
+        .split("[")
+        .map((o) => o.split("]")[0].trim())
+        .filter((o) => o.length > 0);
+      console.log("options are", options);
+      messages.push({ type, options, end });
       break;
     } else {
-      const type = 'message';
-      messages.push ({ type, name, message: message.split('*')[0].trim(), end });
-      if(end) break;
+      const type = "message";
+      messages.push({ type, name, message: message.split("*")[0].trim(), end });
+      if (end) break;
     }
   }
   return messages;
 };
 
-export async function generateRPGDialogue({ location = null, characters = [], objects = [],  messages = [], dstCharacter = null}, generateFn) {
-  const input = { location, characters, objects,  messages, dstCharacter }
+export async function generateRPGDialogue(
+  {
+    location = null,
+    characters = [],
+    objects = [],
+    messages = [],
+    dstCharacter = null,
+  },
+  generateFn
+) {
+  const input = { location, characters, objects, messages, dstCharacter };
   return parseRPGDialogueResponse(
-    await generateFn(
-      makeRPGDialoguePrompt(input),
-      makeRPGDialogueStop()
-    )
+    await generateFn(makeRPGDialoguePrompt(input), makeRPGDialogueStop())
   );
 }
 
@@ -859,11 +902,11 @@ ${location}:`;
 export const makeQuestStop = () => ["\n"];
 
 export const parseQuestResponse = (resp) => {
-    const [quest, reward] = resp.trim().split("|");
-    return {
-      quest: quest.trim(),
-      reward: reward.trim(),
-    };
+  const [quest, reward] = resp.trim().split("|");
+  return {
+    quest: quest.trim(),
+    reward: reward.trim(),
+  };
 };
 
 export async function generateQuest({ location }, generateFn) {
@@ -1516,10 +1559,13 @@ export const makeChatPrompt = ({
   return `\
 ${actionsExamples}
 
-${messages.map((message, i) => { return `\
+${messages
+  .map((message, i) => {
+    return `\
 ${i % 2 === 0 ? "Input:" : "Output:"}
 ${message.name}: ${message.text} (react = ${message.emote || "normal"})`;
-}).join("\n")}
+  })
+  .join("\n")}
 ${nextCharacter.name}: "`;
 };
 
@@ -1667,10 +1713,13 @@ export const makeOptionsPrompt = ({
 }) => {
   return `\
 ${actionExamples}
-${messages.map((message) => {
-        return `${message.name}: "${message.text} (react = ${message.emote ? message.emote : "normal"
-          })"`;
-      }).join("\n")}
+${messages
+  .map((message) => {
+    return `${message.name}: "${message.text} (react = ${
+      message.emote ? message.emote : "normal"
+    })"`;
+  })
+  .join("\n")}
 Options for ${nextCharacter.name}: [`;
 };
 
