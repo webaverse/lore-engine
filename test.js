@@ -669,7 +669,10 @@ const run = async () => {
       testData.messages[0].speaker,
       testData.messages[0].message
     );
-    const prompt = makeReactionPrompt();
+    const prompt = makeReactionPrompt(
+      testData.messages[0].speaker,
+      testData.messages[0].message
+    );
 
     delete output.prompt;
 
