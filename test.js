@@ -46,6 +46,8 @@ import {
   makeLocationStop,
   makeReactionPrompt,
   makeReactionStop,
+  generateNPCComment,
+  generateMobComment,
 } from "./lore-model.js";
 
 const args = process.argv;
@@ -251,7 +253,7 @@ const run = async () => {
   // ********** OBJECT COMMENT **********
   async function generateObjectCommentTest() {
     const { name, description } = testData.objects[0];
-    const prompt = makeCommentPrompt({ name, description, type: "object" });
+    const prompt = makeCommentPrompt({ name, description, type: "Object" });
 
     const output = await generateObjectComment(
       { name, description },
@@ -272,6 +274,58 @@ const run = async () => {
     test.toLowerCase().includes("objectcomment")
   ) {
     promises.push(generateObjectCommentTest);
+  }
+
+  // ********** NPC COMMENT **********
+  async function generateNPCCommentTest() {
+    const { name, description } = testData.npcs[0];
+    const prompt = makeCommentPrompt({ name, description, type: "Character" });
+
+    const output = await generateNPCComment(
+      { name, description },
+      makeGenerateFn()
+    );
+
+    writeData(
+      testData.objects[0],
+      prompt,
+      output.value,
+      "npc_comment",
+      makeCommentStop()
+    );
+  }
+
+  if (
+    test.toLowerCase().includes("all") ||
+    test.toLowerCase().includes("npccomment")
+  ) {
+    promises.push(generateNPCCommentTest);
+  }
+
+  // ********** Mob COMMENT **********
+  async function generateMobCommentTest() {
+    const { name, description } = testData.mobs[0];
+    const prompt = makeCommentPrompt({ name, description, type: "Character" });
+
+    const output = await generateMobComment(
+      { name, description },
+      makeGenerateFn()
+    );
+
+    writeData(
+      testData.objects[0],
+      prompt,
+      output.value,
+      "mob_comment",
+      makeCommentStop()
+    );
+  }
+
+  if (
+    test.toLowerCase().includes("all") ||
+    test.toLowerCase().includes("mobcomment")
+  ) {
+    promises.push(generateMobCommentTest);
   }
 
   // ********** LOCATION COMMENT **********
