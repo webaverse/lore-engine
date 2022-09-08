@@ -485,8 +485,13 @@ export const makeExpositionPrompt = ({
   type = "Object",
 }) => {
   return `\
-${(type !== "location" && location && location + "\n") || ""}\
 Detailed and descriptive exposition on locations, objects and characters from a futuristic sci-fi video game called Upstreet.
+${
+  (type !== "location" &&
+    location &&
+    "Location: " + location.name + "\nQuote: " + location.description + "\n") ||
+  ""
+}\
 Object: "The Great Deku Tree" An enormous, grey, old tree. It is partly petrified.
 Quote: "It's just an old tree. It's the kind of tree that makes me want to carve out an old mans face in it."
 Character: "Kitten" A small black kitten with big green eyes.
@@ -528,7 +533,7 @@ ${capitalizeFirstLetter(type)}: "${name}"`;
 };
 
 export const makeExpositionStop = (type) => [
-  `\n${type.toUpperCase()}:`,
+  `${capitalizeFirstLetter(type)}:`,
   "\n\n",
 ];
 
@@ -910,7 +915,9 @@ export const parseQuestResponse = (resp) => {
 };
 
 export async function generateQuest({ location }, generateFn) {
-  const input = { location };
+  const input = {
+    location: typeof location === "object" ? location.name : location,
+  };
   return parseQuestResponse(
     await generateFn(makeQuestPrompt(input), makeQuestStop())
   );

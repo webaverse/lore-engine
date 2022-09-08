@@ -346,7 +346,8 @@ const run = async () => {
 
   if (
     test.toLowerCase().includes("all") ||
-    test.toLowerCase().includes("location")
+    test.toLowerCase().includes("location") ||
+    test.toLowerCase().includes("loadingcomment")
   ) {
     promises.push(generateLocationCommentTest);
   }
@@ -752,6 +753,7 @@ const run = async () => {
 
   if (
     test.toLowerCase().includes("all") ||
+    test.toLowerCase().includes("quest") ||
     (test.toLowerCase().includes("action") &&
       !test.toLowerCase().includes("reaction"))
   ) {
