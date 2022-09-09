@@ -67,7 +67,6 @@ const test =
   (!args[3]?.includes("sk-") && args[3]) ||
   "all";
 
-// TODO refactor this to come from constants
 const testData = {
   locations: [
     {
@@ -777,77 +776,6 @@ const run = async () => {
     promises.push(generateQuestTest);
   }
 
-  // ********** LORE GENERATION **********
-  async function generateLoreTest() {
-    const input = {
-      locations: testData.locations,
-      characters: [...testData.party, ...testData.npcs],
-      messages: testData.messages,
-      objects: testData.objects,
-      dstCharacter: testData.party[1],
-      localCharacter: testData.party[0],
-    };
-
-    const prompt = makeLorePrompt(input);
-
-    const output = await generateLore(input, makeGenerateFn());
-
-    console.log("*********** generateLore:");
-    console.log(output);
-
-    console.log("STOP:", makeLoreStop(input.localCharacter));
-
-    writeData(
-      input,
-      prompt,
-      output,
-      "lore",
-      makeLoreStop(input.localCharacter)
-    );
-  }
-
-  if (
-    test.toLowerCase().includes("all") ||
-    test.toLowerCase().includes("lore")
-  ) {
-    promises.splice(generateLoreTest());
-  }
-
-  async function generateLoreFileTest() {
-    const input = {
-      location: testData.locations[0],
-      character: testData.party,
-      npc: testData.npcs,
-      mob: testData.mobs,
-      object: testData.objects,
-      header: exampleLoreFiles[0],
-    };
-
-    const prompt = makeLoreFilePrompt({
-      location: input.location,
-      party: [...input.character, ...input.npc],
-      header: input.header,
-      npcs: input.npc,
-      objects: input.object,
-    });
-
-    const output = await generateLoreFile(input, makeGenerateFn());
-
-    console.log("*********** generateLore:");
-    console.log(output);
-
-    writeData(input, prompt, output, "lore_file", ["\n\n", '"""']);
-  }
-
-  if (
-    test.toLowerCase().includes("all") ||
-    test.toLowerCase().includes("lorefile")
-  ) {
-    promises.splice(generateLoreFileTest());
-  }
-
-  // promises.push(generateLoreTest);
-
   async function generateChatMessageTest() {
     const outputs = [];
     let input = {
@@ -912,6 +840,75 @@ const run = async () => {
     test.toLowerCase().includes("options")
   ) {
     promises.push(generateDialogueOptionsTest);
+  }
+
+  // ********** LORE GENERATION **********
+  async function generateLoreTest() {
+    const input = {
+      locations: testData.locations,
+      characters: [...testData.party, ...testData.npcs],
+      messages: testData.messages,
+      objects: testData.objects,
+      dstCharacter: testData.party[1],
+      localCharacter: testData.party[0],
+    };
+
+    const prompt = makeLorePrompt(input);
+
+    const output = await generateLore(input, makeGenerateFn());
+
+    console.log("*********** generateLore:");
+    console.log(output);
+
+    console.log("STOP:", makeLoreStop(input.localCharacter));
+
+    writeData(
+      input,
+      prompt,
+      output,
+      "lore",
+      makeLoreStop(input.localCharacter)
+    );
+  }
+
+  if (
+    test.toLowerCase().includes("all") ||
+    test.toLowerCase().includes("lore")
+  ) {
+    promises.push(generateLoreTest);
+  }
+
+  async function generateLoreFileTest() {
+    const input = {
+      location: testData.locations[0],
+      character: testData.party,
+      npc: testData.npcs,
+      mob: testData.mobs,
+      object: testData.objects,
+      header: exampleLoreFiles[0],
+    };
+
+    const prompt = makeLoreFilePrompt({
+      location: input.location,
+      party: [...input.character, ...input.npc],
+      header: input.header,
+      npcs: input.npc,
+      objects: input.object,
+    });
+
+    const output = await generateLoreFile(input, makeGenerateFn());
+
+    console.log("*********** generateLore:");
+    console.log(output);
+
+    writeData(input, prompt, output, "lore_file", ["\n\n", '"""']);
+  }
+
+  if (
+    test.toLowerCase().includes("all") ||
+    test.toLowerCase().includes("lorefile")
+  ) {
+    promises.push(generateLoreFileTest);
   }
 
   await Promise.all(promises.map((p) => p()));
