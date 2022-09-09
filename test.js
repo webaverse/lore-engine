@@ -54,6 +54,8 @@ import {
   makeLoreFilePrompt,
   generateLoreFile,
   exampleLoreFiles,
+  makeQuestPrompt,
+  makeQuestStop,
 } from "./lore-model.js";
 
 const args = process.argv;
@@ -755,27 +757,25 @@ const run = async () => {
   }
 
   // ********** QUEST **********
-  // TODO
   async function generateQuestTest() {
     const input = { location: testData.locations[0] };
+    const prompt = makeQuestPrompt(input);
     const output = await generateQuest(input, makeGenerateFn());
 
     console.log("*********** generateQuest:");
     console.log(output);
+
+    writeData(input, prompt, JSON.stringify(output), "quest", makeQuestStop());
   }
 
   if (
     test.toLowerCase().includes("all") ||
-    test.toLowerCase().includes("quest") ||
-    (test.toLowerCase().includes("action") &&
-      !test.toLowerCase().includes("reaction"))
+    test.toLowerCase().includes("quest")
   ) {
     promises.push(generateQuestTest);
   }
 
   // ********** LORE GENERATION **********
-
-  // TODO: This is the regular lore engine test
   async function generateLoreTest() {
     const input = {
       locations: testData.locations,
