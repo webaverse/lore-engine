@@ -937,7 +937,7 @@ export const makeLorePrompt = ({
 # Overview
 AI anime avatars in a virtual world. They have human-level intelligence and unique and interesting personalities.
 # Location
-${locations}
+${locations.map((l) => `"${l.name}" ${l.description}`).join("\n") + "\n"}
 
 ## Characters
 ${characters.map((c) => `"${c.name}" ${c.description}\n`).join("\n")}
@@ -1006,24 +1006,6 @@ stop: When the Input clearly indicates that a Character has to stop something, u
 
 >> Hyacinth: Today I lost one of my closest firend in the battle.
 >> Anon: I am so sorry to hear it. (react = sad, action = none, object = none, target = none)
-
->> Hyacinth: Your actions have caused a lot of trouble to others.
->> Scillia: But I did not do it. (react = angry, action = none, object = none, target = none)
-
->> Drake: Hyacinth, when was the last time you were here?
->> Hyacinth: I haven't been back since my father's funeral. (react = sad, action = none, object = none, target = none)
-
->> Scillia: Hey Hyacinth, as soon as we open the barrier, we rush to the site and attack.
->> Hyacinth: I am ready. Signal me as soon as the barrier opens. (react = alert, action = follow, object = none, target = none)
-
->> Anon: Hyacinth want to go on an adventure together??
->> Hyacinth: Sure, lets go! (react = headNod, action = none, object = none, target = none)
-
->> Anon: Would you tell me more about Ironford?
->> Drake: The city of Ironford was built in the center of a giant forest and is truly a modest marvel. Its allure is matched by the backdrop of lush forests which have helped shape the city to what it is today. (react = headNod, action = none, object = none, target = none)
-
->> Anon: The monsters have captures the people of the village.
->> Hyacinth: I will find and kill each of those monsters myself. (react = angry, action = move to, object = none, target = monster)
 
 >> Scillia: Hey Hyacinth, what is your favorite book?
 >> Hyacinth: My favorite book is The Lord of the Rings. I love the story and the world that J.R.R. Tolkien created. (react = normal, action = none, object = none, target = none)
@@ -1160,8 +1142,9 @@ export const parseLoreResponse = (response) => {
   }
 };
 
-export const makeLoreStop = (localCharacter, localCharacterIndex) =>
-  `\n+${thingHash(localCharacter, localCharacterIndex)}`;
+export const makeLoreStop = (localCharacter, localCharacterIndex) => [
+  `\n+${thingHash(localCharacter, localCharacterIndex)}`,
+];
 
 export const postProcessResponse = (response, characters, dstCharacter) => {
   console.log("response:", response);

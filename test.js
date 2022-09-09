@@ -75,6 +75,11 @@ const testData = {
       description: `\
 It's more of a floating island but they call it a tree house. Inside the treehouse lives a monster, the Lisk, which is an advanced AI from far up the Street.`,
     },
+    {
+      name: "Volcano",
+      description: `\
+It's so dark and hot around, your bones will melt if you approach a lot`,
+    },
   ],
   npcs: [
     {
@@ -219,17 +224,14 @@ function makeGenerateFn() {
         "https://api.openai.com/v1/completions",
         requestOptions
       );
-      console.log(response);
-      const data = await response.json();
-      if (
-        !data.choices ||
-        data.choices === undefined ||
-        data.choices?.length <= 0 ||
-        data.choices?.[0] === undefined ||
-        !data.choices?.[0]
-      ) {
+      if (response.status !== 200) {
+        console.log(response.statusText);
+        console.log(response.status);
+        console.log(await response.text());
+        return "";
       }
 
+      const data = await response.json();
       console.log("choices:", data.choices);
       return data.choices[0]?.text;
     } catch (e) {
@@ -792,6 +794,8 @@ const run = async () => {
 
     console.log("*********** generateLore:");
     console.log(output);
+
+    console.log("STOP:", makeLoreStop(input.localCharacter));
 
     writeData(
       input,
