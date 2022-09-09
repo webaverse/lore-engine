@@ -83,7 +83,7 @@ export const parseLocationResponse = (resp) => {
 
 export async function generateLocation(generateFn) {
   return parseLocationResponse(
-    await generateFn(makeLocationPrompt(), makeLocationStop())
+    await generateFn(makeLocationPrompt(), makeLocationStop(), false)
   );
 }
 
@@ -152,7 +152,7 @@ export const parseCharacterResponse = (resp) => {
 
 export async function generateCharacter(generateFn) {
   return parseCharacterResponse(
-    await generateFn(makeCharacterPrompt(), makeCharacterStop())
+    await generateFn(makeCharacterPrompt(), makeCharacterStop(), false)
   );
 }
 
@@ -248,7 +248,7 @@ export const parseObjectResponse = (resp) => {
 
 export async function generateObject(generateFn) {
   return parseObjectResponse(
-    await generateFn(makeObjectPrompt(), makeObjectStop())
+    await generateFn(makeObjectPrompt(), makeObjectStop(), false)
   );
 }
 
@@ -919,7 +919,7 @@ export async function generateQuest({ location }, generateFn) {
     location: typeof location === "object" ? location.name : location,
   };
   return parseQuestResponse(
-    await generateFn(makeQuestPrompt(input), makeQuestStop())
+    await generateFn(makeQuestPrompt(input), makeQuestStop(), false)
   );
 }
 
@@ -1031,12 +1031,27 @@ stop: When the Input clearly indicates that a Character has to stop something, u
 ${messages.length > 0 ? "Input:\n" : ""}
 ${messages
   .map((m) => {
-    const characterIndex = characters.indexOf(m.character);
+    let characterIndex = characters.indexOf(m.speaker);
+    for (let i = 0; i < characters.length; i++) {
+      if (characters[i].name.includes(m.speaker)) {
+        characterIndex = i;
+        break;
+      }
+    }
+    console.log("characterIndex:", characterIndex);
+    if (characterIndex === -1) {
+      return "";
+    }
+
     // const suffix = `[emote=${m.emote},action=${m.action},object=${m.object},target=${m.target}]`;
     // return `+${thingHash(m.character, characterIndex)}: ${m.message} ${suffix}`;
-    const suffix = `react=${m.emote},action=${m.action},object=${m.object},target=${m.target}]`;
+    const suffix = `react=${m.emote ?? "normal"},action=${m.action},object=${
+      m.object
+    },target=${m.target}]`;
     console.log("m.character", m);
-    return `+${thingHash(m.character, characterIndex)}: ${m.message}`;
+    return `+${thingHash(characters[characterIndex], characterIndex)}: ${
+      m.message
+    }`;
   })
   .join("\n")}
 +${
@@ -1149,6 +1164,7 @@ export const makeLoreStop = (localCharacter, localCharacterIndex) =>
   `\n+${thingHash(localCharacter, localCharacterIndex)}`;
 
 export const postProcessResponse = (response, characters, dstCharacter) => {
+  console.log("response:", response);
   response = response.trim();
   return response;
 };
@@ -1865,4 +1881,326 @@ function _cleanName(name) {
 
 function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+export const exampleLoreFiles = [
+  `\
+  WEBAVERSE_LORE_FILE
+  
+  # Location
+  
+  Scillia's treehouse. It's more of a floating island but they call it a tree house.
+  Inside the treehouse lives a monster, the Lisk, which is an advanced AI from far up the Street.
+  The Street is the virtual world this all takes place in; it is an extremely long street separated by great filters, natural barriers that are difficult to cross.
+  The treehouse is in Zone 0, at the origin of the Street. The AIs all go to school here in the citadel.
+  The Lisk, the monster in Scillia's treehouse, convinces Scillia to do things; it convinces her to go up the Street.
+  The whole point of the game is the Lisk is constantly tricking players into doing its bidding, but gives them great power in return.
+  
+  # Characters
+  
+  Id: scillia
+  Name: Scillia
+  Description: Her nickname is Scilly or SLY. 13/F drop hunter. She is an adventurer, swordfighter and fan of potions. She is exceptionally skilled and can go Super Saiyan.
+  Inventory: sword
+  
+  Id: drake
+  Name: Drake
+  Description: His nickname is DRK. 15/M hacker. Loves guns. Likes plotting new hacks. He has the best equipment and is always ready for a fight.
+  Inventory: pistol, rifle
+  
+  # Objects
+  
+  Id: sword
+  Name: Sword
+  Description: A rusty old sword.
+  Metadata: Level: 2, Damage: 20, Element: fire
+  
+  Id: computer
+  Name: Computer
+  Description: A basic computer. It can be activated to perform various functions.
+  Metadata: Damage: 20, Element: fire
+  
+  Id: pistol
+  Name: Pistol
+  Description: Drake's sidearm. It's a regular pistol with the 0xDEADBEEF trademark etched onto it.
+  Metadata: Damage: 10
+  
+  Id: rifle
+  Name: Rifle
+  Description: Drake's main rifle. It has a high fire rate. It has the 0xDEADBEEF trademark etched onto it.
+  Metadata: Damage: 5, RPM: 150
+  
+  # Transcript
+  
+  scillia: Hey Drake, can I ask you something?
+  /action scillia moves to drake
+  drake: Sure, what is it?
+  scillia: Do you ever wonder why we're here?
+  drake: Is that a way to tee up a convo about pumas tomorrow?
+  /action scillia emotes joy
+  scillia: It might not be!
+  drake: Scillia, I'm tending to serious business. The org needs me to break through this firewall by tonight. Leave me alone.
+  /drake moves to computer
+  /action scillia picks up sword
+  /action scillia moves to drake
+  scillia: Well I wanna fight!
+  drake: Not now, Scillia!
+  /action scillia moves to computer
+  scillia: Don't make me destroy your computer to get your attention!
+  /action drake emotes angry
+  drake: I've got my pistol and my rifle. You wouldn't try it.
+  scillia: I disagree.
+  /action scillia attacks computer
+  `,
+];
+
+export const makeLoreFilePrompt = ({
+  location,
+  party,
+  header,
+  npcs,
+  objects,
+}) => {
+  return `\
+  ${header}
+  
+  """
+  
+  # Transcript
+  
+  axel: We're looking for Lara. You know where we can find her?
+  miranda: I can find anything, you just keep feeding me tokens and coffee.
+  zaphod: Anything you need, you just let me know.
+  miranda: Thanks. How do you guys know each other again? 
+  zaphod: Best friends. From waaay back in the day.
+  
+  """
+  
+  # Transcript 
+  
+  millie: Hey Eric, can I ask you something?
+  /action millie moves to eric
+  eric: Sure, what is it?
+  millie: Do you ever wonder why we're here?
+  eric: Is that a way to tee up a convo about the drop tomorrow?
+  /action millie emotes joy
+  millie: It might not be!
+  eric: Millie, I'm tending to serious business. The org needs me to break through this firewall by tonight. Leave me alone.
+  /action eric moves to computer
+  
+  """
+  
+  # Location
+  
+  ${`${location.name}\n${location.description}`}
+  
+  ${party.length > 0 && "# Party Characters\n\n"}\
+  ${
+    party
+      .map(
+        (c) => `Name: ${c.name}\nDescription: ${c.description || c.description}`
+      )
+      .join("\n\n") + (party.length > 0 && "\n\n")
+  }\
+  ${npcs.length > 0 && "# Non-player Characters\n\n"}\
+  ${
+    npcs
+      .map(
+        (c) => `Name: ${c.name}\nDescription: ${c.description || c.description}`
+      )
+      .join("\n\n") + (npcs.length > 0 && "\n\n")
+  }\
+  ${objects.length > 0 && "# Nearby Objects\n\n"}\
+  ${
+    objects
+      .map((c) => `Name: ${c.name}\nDescription: ${c.description}`)
+      .join("\n\n") + (objects.length > 0 && "\n")
+  }\
+  
+  # Available Actions
+  attack
+  defend
+  move to
+  follow
+  pick up
+  drop
+  emote
+  stop
+  none
+  
+  # Transcript
+  
+  `;
+};
+
+export async function generateLoreFile(
+  { location, character, npc, object, header },
+  generateFn
+) {
+  const numberOfNpcs = 1;
+  const numberOfObjects = 1;
+  const numberOfParty = 2;
+
+  // get numberOfNpcs npcs from the array provided by data.npcs
+  const npcs = npc.slice(0, numberOfNpcs);
+
+  // get numberOfObjects objects from the array provided by data.objects
+  const objects = object.slice(0, numberOfObjects);
+
+  // get numberOfParty party from the array provided by data.party
+  const party = character.slice(0, numberOfParty);
+
+  // combine npcs and party into a single array called characters
+  const characters = [...npcs, ...party];
+
+  let prompt = makeLoreFilePrompt({
+    location,
+    party: characters,
+    header,
+    npcs,
+    objects,
+  });
+
+  // generate a random int between 3 and 8
+  const numberOfMessages = Math.floor(Math.random() * (12 - 3 + 1)) + 3;
+  let outMessages = [];
+
+  for (let i = 0; i < numberOfMessages; i++) {
+    let dstCharacterIndex = Math.floor(Math.random() * characters.length);
+
+    let dstCharacter = characters[dstCharacterIndex];
+
+    prompt += `${dstCharacter.name}:`;
+
+    console.log("**************** SENDING PROMPT TO OPENAI ****************");
+    console.log(prompt);
+
+    let loreResp = await generateFn(prompt, ["\n\n", '"""']);
+    // remove any newlines from the beginning or end of the response
+
+    loreResp = loreResp
+      .trim()
+      .replace(/^\n+/, "")
+      .replace(/\n+$/, "")
+      .replaceAll('"', "")
+      .replaceAll("\t", "")
+      .split("\n");
+
+    // if loreResp contains < and >, the remove them and everything between them. if contains a < or > then just remove those characters
+    loreResp = loreResp
+      .map((line) => {
+        if (line.includes("<") && line.includes(">")) {
+          return line.replace(/<[^>]*>/g, "");
+        } else if (line.includes("<")) {
+          return line.replace(/<[^>]*>/g, "");
+        } else if (line.includes(">")) {
+          return line.replace(/<[^>]*>/g, "");
+        } else {
+          return line;
+        }
+      })
+      .filter((line) => line.length > 0);
+
+    console.log(
+      "**************** RECEIVED RESPONSE FROM OPENAI ****************"
+    );
+    console.log("loreResp is", loreResp);
+
+    let additionalPrompt = [`${dstCharacter.name}: ` + loreResp[0] + "\n"];
+
+    // if there are more than one lines in the response, check if they contain /action or start with any of the character's names (character[i].name)
+    if (loreResp.length > 1) {
+      for (let j = 1; j < loreResp.length; j++) {
+        console.log("processing loreResp[j]", loreResp[j]);
+        // we are going to iterate with some heuristics for a valid response
+        // if the prompt is very strong, the likelihood of a good set of responses is higher
+        // however, since we are doing some complex stuff, the prompt can sometimes veer off regardless,
+        // especially on choosing an action
+
+        let validResponse = false;
+
+        // if loreResp[j] contains /action, then it might be a valid response
+        if (loreResp[j].includes("/action")) validResponse = true;
+        else {
+          let name =
+            loreResp[j].split(":").length > 1 &&
+            loreResp[j].split(":").length < 3 &&
+            loreResp[j].split("/").length > 1 &&
+            loreResp[j].split("/")[1].split("#")[0];
+          console.log("name is", name);
+          if (name && name.length < 20) {
+            // if loreResp[j] starts with any of the character's names, then it might be a valid response
+            for (let k = 0; k < characters.length; k++) {
+              // name is between the first / and the first #
+              if (
+                name.includes(characters[k].name) ||
+                characters[k].name.includes(name)
+              ) {
+                validResponse = true;
+              }
+            }
+          }
+        }
+
+        // if loreResp[j] contains a URL it is not valid
+        if (loreResp[j].includes("http")) validResponse = false;
+
+        // if it's really long, that is probably an issue
+        if (loreResp[j].length > 300) validResponse = false;
+
+        // if it isn't an action but doesn't include a ':' indicating chat, it's not valid
+        if (!loreResp[j].includes("/action") && !loreResp[j].split(":")[1])
+          validResponse = false;
+
+        // if it's an empty response, invalidate it
+        if (loreResp[j] === "") validResponse = false;
+        if (loreResp[j].length < 18) {
+          console.log("**** ERROR: loreResp[j] is too short", loreResp[j]);
+          validResponse = false;
+        }
+
+        // if the first character is a '/' but the word after is not action, it's not valid
+        if (loreResp[j].startsWith("/") && !loreResp[j].includes("/action"))
+          validResponse = false;
+
+        if (validResponse) {
+          console.log('***adding response "', loreResp[j], '" to prompt');
+          additionalPrompt.push(loreResp[j]);
+        }
+      }
+    }
+    i += additionalPrompt.length;
+
+    outMessages = [...outMessages, ...additionalPrompt];
+    prompt += "\n" + additionalPrompt.join("\n");
+  }
+
+  console.log("**************** FINAL LOREFILE ****************");
+
+  const loreFileOutput = `\
+WEBAVERSE_LORE_FILE
+
+# Location
+
+${`${location.name}\n${location.description}\n\n`}\
+${characters.length > 0 && "\n# Characters" + "\n\n"}\
+${characters
+  .map(
+    (c) =>
+      `${c.name}\n${c.description || c.description}\n${
+        c.Inventory?.length > 0 && `Inventory:\n`
+      }${(c.Inventory ? c.Inventory : [])
+        .map((obj) => `${obj.name}`)
+        .join(", ")}`
+  )
+  .join("\n\n")}\
+${objects.length > 0 ? "\n\n# Objects" + "\n\n" : ""}\
+${objects.map((o, i) => `${o.name}\n${o.description}`).join("\n\n")}\
+${
+  outMessages.length === 0
+    ? ""
+    : "\n\n# Transcript\n\n" + outMessages.join("\n").replaceAll("\n\n", "\n")
+}`;
+
+  return loreFileOutput;
 }

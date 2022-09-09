@@ -49,6 +49,11 @@ import {
   generateNPCComment,
   generateMobComment,
   makeOptionsPrompt,
+  makeLorePrompt,
+  makeLoreStop,
+  makeLoreFilePrompt,
+  generateLoreFile,
+  exampleLoreFiles,
 } from "./lore-model.js";
 
 const args = process.argv;
@@ -212,13 +217,19 @@ function makeGenerateFn() {
         "https://api.openai.com/v1/completions",
         requestOptions
       );
+      console.log(response);
       const data = await response.json();
-      if (!data.choices || data.choices?.length <= 0) {
-        return "";
+      if (
+        !data.choices ||
+        data.choices === undefined ||
+        data.choices?.length <= 0 ||
+        data.choices?.[0] === undefined ||
+        !data.choices?.[0]
+      ) {
       }
 
       console.log("choices:", data.choices);
-      return data.choices[0].text;
+      return data.choices[0]?.text;
     } catch (e) {
       console.log(e);
       return "returning from error";
@@ -766,15 +777,14 @@ const run = async () => {
 
   // TODO: This is the regular lore engine test
   async function generateLoreTest() {
-    const // {
-      //   locations,
-      //   characters,
-      //   messages = [],
-      //   objects,
-      //   dstCharacter = null,
-      //   localCharacter,
-      // }
-      input = testData;
+    const input = {
+      locations: testData.locations,
+      characters: [...testData.party, ...testData.npcs],
+      messages: testData.messages,
+      objects: testData.objects,
+      dstCharacter: testData.party[1],
+      localCharacter: testData.party[0],
+    };
 
     const prompt = makeLorePrompt(input);
 
@@ -783,7 +793,53 @@ const run = async () => {
     console.log("*********** generateLore:");
     console.log(output);
 
-    writeData("", prompt, output, "lore", makeLoreStop());
+    writeData(
+      input,
+      prompt,
+      output,
+      "lore",
+      makeLoreStop(input.localCharacter)
+    );
+  }
+
+  if (
+    test.toLowerCase().includes("all") ||
+    test.toLowerCase().includes("lore")
+  ) {
+    promises.splice(generateLoreTest());
+  }
+
+  async function generateLoreFileTest() {
+    const input = {
+      location: testData.locations[0],
+      character: testData.party,
+      npc: testData.npcs,
+      mob: testData.mobs,
+      object: testData.objects,
+      header: exampleLoreFiles[0],
+    };
+
+    const prompt = makeLoreFilePrompt({
+      location: input.location,
+      party: [...input.character, ...input.npc],
+      header: input.header,
+      npcs: input.npc,
+      objects: input.object,
+    });
+
+    const output = await generateLoreFile(input, makeGenerateFn());
+
+    console.log("*********** generateLore:");
+    console.log(output);
+
+    writeData(input, prompt, output, "lore_file", ["\n\n", '"""']);
+  }
+
+  if (
+    test.toLowerCase().includes("all") ||
+    test.toLowerCase().includes("lorefile")
+  ) {
+    promises.splice(generateLoreFileTest());
   }
 
   // promises.push(generateLoreTest);
@@ -799,10 +855,10 @@ const run = async () => {
     for (let i = 0; i < testData.party.length; i++) {
       input = { messages: testData.messages, nextCharacter: testData.party[i] };
       const _res = await generateChatMessage(input, makeGenerateFn());
-      const value = _res.value;
-      const emote = _res.emote;
-      const done = _res.value;
-      
+      const value = _res?.value;
+      const emote = _res?.emote;
+      const done = _res?.value;
+
       outputs.push(`${testData.party[i].name}: ${value} (emote = ${emote})`);
       if (done) {
         break;
