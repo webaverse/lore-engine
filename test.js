@@ -225,7 +225,7 @@ function makeGenerateFn() {
     }
   }
 
-  async function openaiRequest(key, prompt, stop) {
+  async function openaiRequest(key, prompt, stop, needsRepetition) {
     if (!key || key?.length <= 0) {
       return;
     }
@@ -235,15 +235,15 @@ function makeGenerateFn() {
       prompt,
       stop,
       top_p: 1,
-      frequency_penalty: 0.1,
-      presence_penalty: 0.1,
+      frequency_penalty: needsRepetition ? 0.1 : 0.4,
+      presence_penalty: needsRepetition ? 0.1 : 0.4,
       temperature: 0.85,
       max_tokens: 256,
       best_of: 1,
     });
   }
-  return async (prompt, stop) => {
-    return await openaiRequest(getOpenAIKey(), prompt, stop);
+  return async (prompt, stop, needsRepetition = true) => {
+    return await openaiRequest(getOpenAIKey(), prompt, stop, needsRepetition);
   };
 }
 
@@ -334,7 +334,7 @@ const run = async () => {
     const prompt = makeCommentPrompt({ ...input, type: "location" });
 
     const output = await generateLocationComment(input, makeGenerateFn());
-    
+
     writeData(
       input,
       prompt,
@@ -798,10 +798,11 @@ const run = async () => {
     // iterate over testData.party.length
     for (let i = 0; i < testData.party.length; i++) {
       input = { messages: testData.messages, nextCharacter: testData.party[i] };
-      const { value, emote, done } = await generateChatMessage(
-        input,
-        makeGenerateFn()
-      );
+      const _res = await generateChatMessage(input, makeGenerateFn());
+      const value = _res.value;
+      const emote = _res.emote;
+      const done = _res.value;
+      
       outputs.push(`${testData.party[i].name}: ${value} (emote = ${emote})`);
       if (done) {
         break;
