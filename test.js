@@ -48,6 +48,7 @@ import {
   makeReactionStop,
   generateNPCComment,
   generateMobComment,
+  makeOptionsPrompt,
 } from "./lore-model.js";
 
 const args = process.argv;
@@ -198,7 +199,6 @@ function getOpenAIKey() {
 
 function makeGenerateFn() {
   async function query(openai_api_key, params = {}) {
-    console.log("PROMPT:", params.prompt);
     const requestOptions = {
       method: "POST",
       headers: {
@@ -263,7 +263,7 @@ const run = async () => {
     writeData(
       testData.objects[0],
       prompt,
-      output.value,
+      output.comment,
       "object_comment",
       makeCommentStop()
     );
@@ -289,7 +289,7 @@ const run = async () => {
     writeData(
       testData.objects[0],
       prompt,
-      output.value,
+      output.comment,
       "npc_comment",
       makeCommentStop()
     );
@@ -315,7 +315,7 @@ const run = async () => {
     writeData(
       testData.objects[0],
       prompt,
-      output.value,
+      output.comment,
       "mob_comment",
       makeCommentStop()
     );
@@ -334,11 +334,11 @@ const run = async () => {
     const prompt = makeCommentPrompt({ ...input, type: "location" });
 
     const output = await generateLocationComment(input, makeGenerateFn());
-
+    
     writeData(
       input,
       prompt,
-      output.value,
+      output.comment,
       "location_comment",
       makeCommentStop()
     );
@@ -346,7 +346,6 @@ const run = async () => {
 
   if (
     test.toLowerCase().includes("all") ||
-    test.toLowerCase().includes("location") ||
     test.toLowerCase().includes("loadingcomment")
   ) {
     promises.push(generateLocationCommentTest);
@@ -526,9 +525,6 @@ const run = async () => {
 
     //
     const output = `${name} (${description}): ${message}\n(onselect: ${onselect})`;
-
-    console.log("*********** generateCharacterIntro:");
-    console.log(prompt);
     console.log(output);
 
     writeData(
@@ -697,7 +693,13 @@ const run = async () => {
       output += "\n*END*";
     }
 
-    writeData(input, prompt, output, "rpg_dialogue", makeRPGDialogueStop());
+    writeData(
+      input,
+      JSON.stringify(prompt),
+      output,
+      "rpg_dialogue",
+      makeRPGDialogueStop()
+    );
   }
 
   if (
@@ -829,6 +831,7 @@ const run = async () => {
       messages: testData.messages,
       nextCharacter: testData.party[0],
     };
+    const prompt = makeOptionsPrompt(input);
     const output = await generateDialogueOptions(input, makeGenerateFn());
 
     console.log("*********** generateDialogueOptions:");
@@ -836,10 +839,10 @@ const run = async () => {
 
     writeData(
       { messages: testData.messages, nextCharacter: testData.party[0] },
-      "",
+      prompt,
       output,
       "dialogue_options",
-      makeRPGDialogueStop()
+      makeRPGDialogueStop(input.nextCharacter.name)
     );
   }
 

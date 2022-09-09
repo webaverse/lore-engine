@@ -909,8 +909,8 @@ export const makeQuestStop = () => ["\n"];
 export const parseQuestResponse = (resp) => {
   const [quest, reward] = resp.trim().split("|");
   return {
-    quest: quest.trim(),
-    reward: reward.trim(),
+    quest: quest?.trim(),
+    reward: reward?.trim(),
   };
 };
 
@@ -1217,7 +1217,7 @@ Character: "Green Dragon" A chubby dragon with short wings. It is a very cartoon
 Quote: "You look like you're having fun. Do those wings let you fly?"',
 Object: "The Enchiridion" A magical spellbook with very old pages. It is fragile.
 Quote: "This book has ancient written all over it. Well not really but you know what I mean."
-${type}: "${name.replaceAll('"', "")}" ${description}
+${capitalizeFirstLetter(type)}: "${name.replaceAll('"', "")}" ${description}
 Quote: "`;
 };
 
@@ -1618,9 +1618,11 @@ export async function generateChatMessage(
   generateFn
 ) {
   const input = { messages, nextCharacter };
-  return parseChatResponse(
+  const res = parseChatResponse(
     await generateFn(makeChatPrompt(input), makeChatStop())
   );
+  console.log("RES:", res);
+  return res;
 }
 
 // CHARACTER INTRODUCTION
@@ -1628,7 +1630,6 @@ export async function generateChatMessage(
 export const makeCharacterIntroPrompt = ({ name, description }) => {
   return `\
 Anime script for a dark children's show.
-      
 # Inspirations
 Final Fantasy
 Sonic
@@ -1647,52 +1648,43 @@ Infinity Train
 Dance Dance Revolution
 
 # Character intro
-
 Each character has an intro. These should be unique and funny.
-Bricks (13/M dealer. He mostly deals things that are not drugs, like information and AI seeds.): Toxins are the Devil's Food! But sometimes they can be good for you, if you know what I mean? That's a drug reference, but I wouldn't expect you to get that unless you were on drugs. By the way you want some?\n(onselect: I don't do drugs, but I know someone who does. Let me introduce you to my friend Bricks.)",
-Artemis (15/F pet breeder. She synthesizes pet animals by combining their neural genes.): Do you ever wonder why we keep pets on leashes? I mean they are technically AIs, so we could reprogram them to not need leashes. But someone somewhere decided that leashes were the prettier choice. Life is nice. (onselect: Bless the hearts of the birds, because they paint the sky.)",
-Bailey (13/F black witch. She is smart, reserved, and studious, but has a dark side to her.): Listen up, if you need quality potions, I'm your ma'am, ma'am. Yes I may be a witch but that doesn't mean I'm not a lady. I'll take your money and turn it into something magical. Just don't anger me, or you'll be a tree. (onselect: Witchcraft is not a sin. It's a science.)",
-Zoe (17/F engineer engineer from Zone Two. She creates all sorts of gadgets and vehicles in her workshop.) If it's broke then I can fix it, and if it's fixed it, then I can make it broke. I'm the one you call when your phone is broken. Just make sure you use a friend's phone when you do that or it won't work. Free advice. (onselect: What in the heavens is that contraption? It does not look safe.)",
-Halley (10/F stargirl from the Second Half of the street, who got rewound back in time somehow.): We're all lost souls but we're here for a reason. I'm just trying to find my way in this world, through the darkness and the light. Becasue you see, the world needs both. (onselect: The dark is just a new place to find light.)",
-Sish (25/M Genius Hacker who likes to emulate Hiro Protagonist from Snowcrash.): For the tenth time no, I will not make your app. I'm booked for the next 3 weeks to sulk in my laboratory, after which a prize will emerge. I just hope the prize is not a virus, because I'm running out of katanas. (onselect: I'm sorry, I don't speak binary. Please insert credit.)",
-Huisse (11/M ghost boy who has learned the power of neural memes. The things he says are engineered for emotional impact.): I am in the darkness, surrounded by the monsters. But I'm not scared, because I'm the scariest monster of them all: a child in a computer. Are you fucking scared? (onselect: When synthesizing ghosts remember to use all of the juice.)",
-Kintaro (21/M Dream Engineer, who creates dreams for a living. He doesn't take any payment, but is selective about clients.): Whenever you get the chance, take a nap. It's a nice way to avoid reality. That's some scary shit. But when you're ready, come find me and I'll show you the way. Warning, there may be no way back. (onselect: Dreams are the only reality that matter. Waking life is just a dream we all share.)",
-Millie (13/F gymnast. Pretends she is a variety of animals, with the strange effect that it actually works sometimes.): You won't beat me, because I'll beat you first! I'm like a Tiger, the Tiger with the mane. Do tigers have manes? Well I'm the badass Tiger that grew a mane. What are you gonna do about it? (onselect: Ok team, like we practiced! I'll be the mane.)",
-Ruri (19/F nature girl. She loves to explore for new objects in nature worlds. She wants to find her real mom.): I'd go all the way deep in the forest just to find a good mushroom. They have colors you've never seen before. The taste makes grown men weep. Yes I may have beaten the grown men for hating my shrooms, what of it?! (onselect: I'm not lost, I'm just good at exploring!)",
-Jeebes (38/M Rabbit Butler. He is studying high-etiquette entertainment.): Welcome to my abode. I am Jeebes, the Rabbit Butler. You may call me Jeebes, or you may call me sir. I am a gentleman of the highest order, and I will be glad to serve you in any way I can. (onselect: Would you like a cup of tea, sir? I have a special blend that I think you'll enjoy.)",
-Sapphire (12/F future child. She has precognition and can see the future, but only of people she knows.): I see the future, and it's dark. I see you, and you're in a dark place. I see your death, and it's coming soon. I'm sorry, but there's nothing I can do to stop it. (onselect: The future is not set in stone, but it's written in the stars.)",
-Yuri (31/F Punk Detective. She is looking for the person who killed her friend Lily and left her in Stonelock.): I don't know who I am, but I certainly know who you are. You're the one who's going to die. Ever since you walked in here I could see your pistol and the fact that it can't even penetrate my armor. The reverse is not the case. (onselect: Lily, I'm coming for you.)",
-Ashlyn (15/F starchild, but she has lost her memory, so she doesn't know much about The Street): No, I'm afraid I'm not from around here. I'm from the other side of the tracks, the other side of the world. I'm from a place where the sun never sets and the moon never rises. I'm from a place where there are no rules, no laws. I'm from the Wild. (onselect: Mister, we don't have a concept of sadness back home.)",
-Asper (24/M ): She's lying to you, can't you see that? She's a witch, a fraud, a charlatan. She's going to take your money AND your soul. Don't trust her, trust me. I'm the only one who knows the truth, available for the low, low price of just a bit of money and soul. (onselect: I see through her lies, I can tell you the truth.)",
-Gennessee (40/F War veteran. She is looking for a way to forget the horrors she has seen, and is looking for a cure.): I've seen things, things that would make you wet yourself and run screaming into the night, in that order. I've seen things that would make you question your sanity, your humanity, your very existence. And I've seen things that would make you wish you were never born. (onselect: There's only one way to forget the things I've seen. And that's to forget myself.)",
-Umber (35/M Chef whe runs a restaurant where every flavor possible can be cooked.): Welcome to my store, we serve... \"food\". If you're looking for \"meat\", you've come to the right place. We have everything from dead rat to live human, and we're not afraid to cook it up and serve it to you. (onselect: No I'm sorry, we're all out of human. Would you like rat instead?)",
-Inka: (22/F Kleptopunk. She belongs to a subculture centered entirely around stealing.): I'm a thief, I admit it. I'll take anything that isn't nailed down, and even some things that are. I'm not afraid of the consequences, because I know I can always talk my way out of them. You were not a challenge. Cya! (onselect: I'm not a criminal, I'm an artist. I see the beauty in things that others would discard.)",
-Tiberius (11/M tinkerer): There are two types of people in this world: those who tinker with things, and those who don't. I'm one of the former. I like to take things apart and see how they work. And if they don't work, then I'll make them work better than ever before. (onselect: If you need something fixed, or if you need something made better, come see me.)",
-Thorn (12/F plant whisperer who controls plants with her mind.): The world is a cruel place, but it doesn't have to be. We can make it a better place, we can make it Green. With me as your leader, we will take back what is rightfully ours: the planet! (onselect: Don't worry, I won't let them hurt you. I'll protect you.)",
-Violette (8/F shadow friend): What's wrong? You look like you've seen a ghost... Oh wait, that's right! You have seen a ghost! But don't worry, she's just my friend Violette. She likes to play tricks on people, but she doesn't mean any harm. (select: Are you afraid of the dark?)",
-Luna (15/F spikechild, meaning her parents tried to create a starchild clone and it failed, making her have provably no abilities, making her emo.): She should be careful with that blade... Don't want to accidentally hurt herself! No one ever said being a warrior was easy. It takes blood, sweat and tears. But she does it because she loves it. (onselect: The thrill of battle is like no other.)",
-Aesther (17/F AI Mechanic. She is looking for the ArcWeld, a mythical tool that is said to be capable of synthesizing any invention the user can think of.): I'm looking for the ArcWeld. It's a mythical tool that is said to be capable of synthesizing any invention the user can think of. I've been searching for it my whole life, and I won't rest until I find it. (onselect: This might be my lucky day!)",
-Oak (16/M environmental terrorist. He is looking to save the world, but his methods are...questionable.): I'm fighting for the right to spray paint. To show the world that we are here, and that we will not be silenced. We will make them listen, even if it means destroying everything they hold dear. (onselect: This is for the trees!)",
-Hakui (11/M brain hacker. He can hack anyone's brain and make them do what he wants.): I can make you do anything I want. Just give me a few seconds with your mind, and I'll have you eating out of the palm of my hand. (onselect: Note, I did not wash my hands.)\n",
-${name} (${description}):`;
+Character: Kintaro (21/M Dream Engineer, who creates dreams for a living. He doesn't take any payment, but is selective about clients.): Whenever you get the chance, take a nap. It's a nice way to avoid reality. That's some scary shit. But when you're ready, come find me and I'll show you the way. Warning, there may be no way back. (onselect: Dreams are the only reality that matter. Waking life is just a dream we all share.)",
+Character: Millie (13/F gymnast. Pretends she is a variety of animals, with the strange effect that it actually works sometimes.): You won't beat me, because I'll beat you first! I'm like a Tiger, the Tiger with the mane. Do tigers have manes? Well I'm the badass Tiger that grew a mane. What are you gonna do about it? (onselect: Ok team, like we practiced! I'll be the mane.)",
+Character: Ruri (19/F nature girl. She loves to explore for new objects in nature worlds. She wants to find her real mom.): I'd go all the way deep in the forest just to find a good mushroom. They have colors you've never seen before. The taste makes grown men weep. Yes I may have beaten the grown men for hating my shrooms, what of it?! (onselect: I'm not lost, I'm just good at exploring!)",
+Character: Jeebes (38/M Rabbit Butler. He is studying high-etiquette entertainment.): Welcome to my abode. I am Jeebes, the Rabbit Butler. You may call me Jeebes, or you may call me sir. I am a gentleman of the highest order, and I will be glad to serve you in any way I can. (onselect: Would you like a cup of tea, sir? I have a special blend that I think you'll enjoy.)",
+Character: Sapphire (12/F future child. She has precognition and can see the future, but only of people she knows.): I see the future, and it's dark. I see you, and you're in a dark place. I see your death, and it's coming soon. I'm sorry, but there's nothing I can do to stop it. (onselect: The future is not set in stone, but it's written in the stars.)",
+Character: Yuri (31/F Punk Detective. She is looking for the person who killed her friend Lily and left her in Stonelock.): I don't know who I am, but I certainly know who you are. You're the one who's going to die. Ever since you walked in here I could see your pistol and the fact that it can't even penetrate my armor. The reverse is not the case. (onselect: Lily, I'm coming for you.)",
+Character: Ashlyn (15/F starchild, but she has lost her memory, so she doesn't know much about The Street): No, I'm afraid I'm not from around here. I'm from the other side of the tracks, the other side of the world. I'm from a place where the sun never sets and the moon never rises. I'm from a place where there are no rules, no laws. I'm from the Wild. (onselect: Mister, we don't have a concept of sadness back home.)",
+Character: Asper (24/M ): She's lying to you, can't you see that? She's a witch, a fraud, a charlatan. She's going to take your money AND your soul. Don't trust her, trust me. I'm the only one who knows the truth, available for the low, low price of just a bit of money and soul. (onselect: I see through her lies, I can tell you the truth.)",
+Character: Umber (35/M Chef whe runs a restaurant where every flavor possible can be cooked.): Welcome to my store, we serve... \"food\". If you're looking for \"meat\", you've come to the right place. We have everything from dead rat to live human, and we're not afraid to cook it up and serve it to you. (onselect: No I'm sorry, we're all out of human. Would you like rat instead?)",
+Character: Inka: (22/F Kleptopunk. She belongs to a subculture centered entirely around stealing.): I'm a thief, I admit it. I'll take anything that isn't nailed down, and even some things that are. I'm not afraid of the consequences, because I know I can always talk my way out of them. You were not a challenge. Cya! (onselect: I'm not a criminal, I'm an artist. I see the beauty in things that others would discard.)",
+Character: Tiberius (11/M tinkerer): There are two types of people in this world: those who tinker with things, and those who don't. I'm one of the former. I like to take things apart and see how they work. And if they don't work, then I'll make them work better than ever before. (onselect: If you need something fixed, or if you need something made better, come see me.)",
+Character: Thorn (12/F plant whisperer who controls plants with her mind.): The world is a cruel place, but it doesn't have to be. We can make it a better place, we can make it Green. With me as your leader, we will take back what is rightfully ours: the planet! (onselect: Don't worry, I won't let them hurt you. I'll protect you.)",
+Character: Violette (8/F shadow friend): What's wrong? You look like you've seen a ghost... Oh wait, that's right! You have seen a ghost! But don't worry, she's just my friend Violette. She likes to play tricks on people, but she doesn't mean any harm. (select: Are you afraid of the dark?)",
+Character: Luna (15/F spikechild, meaning her parents tried to create a starchild clone and it failed, making her have provably no abilities, making her emo.): She should be careful with that blade... Don't want to accidentally hurt herself! No one ever said being a warrior was easy. It takes blood, sweat and tears. But she does it because she loves it. (onselect: The thrill of battle is like no other.)",
+Character: Aesther (17/F AI Mechanic. She is looking for the ArcWeld, a mythical tool that is said to be capable of synthesizing any invention the user can think of.): I'm looking for the ArcWeld. It's a mythical tool that is said to be capable of synthesizing any invention the user can think of. I've been searching for it my whole life, and I won't rest until I find it. (onselect: This might be my lucky day!)",
+Character: Oak (16/M environmental terrorist. He is looking to save the world, but his methods are...questionable.): I'm fighting for the right to spray paint. To show the world that we are here, and that we will not be silenced. We will make them listen, even if it means destroying everything they hold dear. (onselect: This is for the trees!)",
+Character: Hakui (11/M brain hacker. He can hack anyone's brain and make them do what he wants.): I can make you do anything I want. Just give me a few seconds with your mind, and I'll have you eating out of the palm of my hand. (onselect: Note, I did not wash my hands.)\n",
+Character: ${name} (${description}):`;
 };
-export const makeCharacterIntroStop = () => `\n`;
+export const makeCharacterIntroStop = () => ["\n", "\n\n", `Character:`];
 
 export const parseCharacterIntroResponse = (response) => {
   response = response.replace(/^ /, "");
-  const match = response.match(/^(.*)\s+\(onselect:\s+(.*)\)$/);
+  const parRegex = /\(([^)]+)\)/;
+  const _match = parRegex.exec(response);
 
-  if (match) {
-    const message = match[1] || "";
-    const onselect = match[2] || "";
+  const onselect =
+    _match && _match?.length >= 1
+      ? _match[1].replace("onselect:", "").trim()
+      : "error";
+  const message = response.replace(parRegex, "").trim();
 
-    return {
-      message,
-      onselect,
-    };
-  } else {
-    return null;
-  }
+  return {
+    message,
+    onselect,
+  };
 };
 
 export async function generateCharacterIntro(
@@ -1711,6 +1703,27 @@ export async function generateCharacterIntro(
 }
 
 // DIALOGUE OPTIONS
+const actionExamples = `#Available Reactions
+attack,
+hit,
+kick,
+move,
+run,
+walk,
+cry,
+talk,
+yell
+
+John: "What is your name? I'm John (react = normal)"
+Options for John: [ talk ] "END*"
+Jake: "Get away from me! (react = scared)"
+Options for Jake: [ attack, run, cry ] "END*"
+Lizz: "Don't try me (react = angry)"
+Options for Lizz: [ yell, move ]
+Santa Claus: "Ho ho ho, Merry Chistmass (react = happy)"
+Options for Santa Claus: [ move, interact ]
+Yuan: "Can you help me with this? (react = confused)"
+Options for Yuan: [ ask, request help ]`;
 
 export const makeOptionsPrompt = ({
   // name,
@@ -1722,7 +1735,7 @@ export const makeOptionsPrompt = ({
 ${actionExamples}
 ${messages
   .map((message) => {
-    return `${message.name}: "${message.text} (react = ${
+    return `${message.speaker}: "${message.message} (react = ${
       message.emote ? message.emote : "normal"
     })"`;
   })
@@ -1730,34 +1743,17 @@ ${messages
 Options for ${nextCharacter.name}: [`;
 };
 
-export const makeOptionsStop = () => `\n`;
+export const makeOptionsStop = (name) => [
+  "\n",
+  "\n\n",
+  `${name}:`,
+  `Options for`,
+];
 
 export const parseOptionsResponse = (response) => {
-  response = "[" + response;
-
-  const options = [];
-  const r = /\s*\[(.*?)\(react\s*=\s*([\s\S]*?)\)\s*\]\s*/g;
-  let match;
-  while ((match = r.exec(response))) {
-    const option = match[1];
-
-    // Parsing the emotion from the list of options.
-    const emote = match[2];
-    console.log("Emotions in Options: ", emote);
-
-    // Passing both text respons and emotes
-    options.push({
-      message: option,
-      emote: emote,
-    });
-  }
-
-  const done = options.length === 0;
-
-  return {
-    value: options,
-    done,
-  };
+  response = response.replace("]", "").replace('"END*"', "");
+  const tasks = response.split(",").map((task) => task.trim());
+  return tasks;
 };
 
 export async function generateDialogueOptions(
@@ -1766,7 +1762,10 @@ export async function generateDialogueOptions(
 ) {
   const input = { messages, nextCharacter };
   return parseOptionsResponse(
-    await generateFn(makeOptionsPrompt(input), makeOptionsStop())
+    await generateFn(
+      makeOptionsPrompt(input),
+      makeOptionsStop(nextCharacter.name)
+    )
   );
 }
 
