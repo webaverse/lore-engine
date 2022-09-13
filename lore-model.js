@@ -1,3 +1,8 @@
+export const defaultPlayerName = "Anon";
+export const defaultPlayerBio = "A new player. Not much is known about them.";
+export const defaultObjectName = "Thing";
+export const defaultObjectDescription = "A thing. Not much is known about it.";
+
 // NEW LOCATION
 
 export const makeLocationPrompt = () => {
@@ -926,122 +931,193 @@ export async function generateQuest({ location }, generateFn) {
 // ****************** RUNTIME API **********************
 
 // LORE
+const characterLore = `\
+# Overview
 
+AI anime avatars in a virtual world. They have human-level intelligence and unique and interesting personalities.
+`;
 export const makeLorePrompt = ({
-  locations,
+  settings,
   characters,
   messages,
   objects,
   dstCharacter,
 }) => `\
-# Overview
-AI anime avatars in a virtual world. They have human-level intelligence and unique and interesting personalities.
-# Location
-${locations.map((l) => `"${l.name}" ${l.description}`).join("\n") + "\n"}
-
-## Characters
-${characters.map((c) => `"${c.name}" ${c.description}\n`).join("\n")}
-
-# Objects
-${objects.map((o) => `"${o.name}" ${o.description}\n`).join("\n")}
-
-# Basic Reactions
-normal: When the Character has no emotion attached to the Input.
-headShake: When the Character does not agree with what is in the Input.
-headNod: When the Character agrees with what is being said in the Input.
-sad: When the Character feels sad or bad about what is in the Input.
-victory: When the Character is happy or overjoyed by what is in the Input.
-alert: When the Character gets cautious about what is in the Input.
-angry: When the Character is not satisfied or angry of what is in the Input.
-embarrassed: When the Character is ashamed of what is in the Input.
-surprised: When the Character did not expect what is in the Input.
-
-# Basic Actions
-move to: When the Input clearly indicates that a Character needs to move to another Object/Character, use this action.
-follow: When the Input clearly indicates that a Character needs to follow another Character, use this action.
-pick up: When the Input clearly indicates that a Character needs to pick up an Object, use this action.
-drops: When the Input clearly indicates that a Character needs to give an Object to someone, put an Object at some particular place or just simply remove it from their inventory, use this action.
-none: When the Input clearly indicates that there is no need for any action to be taken by a Character, use this action.
-stop: When the Input clearly indicates that a Character has to stop something, use this action.
-
-# Examples of How to Parse Inputs
->> Scillia: Hi Drake! Whats up?
->> Drake: I am doing good. How about you? (react = normal, action = follow, object = none, target = scillia)
-
->> Hyacinth: What mischief are you upto today?
->> Anon: None. I have been good all day. (react = headNod, action = none, object = none, target = none)
-
->> Scillia: Why did you break that expensive artifact? Now I will have to pay up for the damage.
->> Drake: I am really sorry about it. (react = embarrassed, action = none, object = none, target = none)
-
->> Anon: We finally won the battle Juniper!
->> Juniper: Hurray! We did it. (react = victory, action = none, object = none, target = none)
-
->> Scillia: I am tired. How far is the dungeon, Hyacinth?
->> Hyacinth: Just a bit further, dont worry. (react = normal, action = none, object = none, target = none)
-
->> Drake: Hyacinth, are you going to visit the Church today?
->> Hyacinth: No, I will not go today. (react = headShake, action = none, object = none, target = none)
-
->> Drake: Hyacinth, are you going to visit the Church today?
->> Hyacinth: Yes. I will go now. (react = headNod, action = moveto, object = none, target = church)
-
->> Drake: Hyacinth, we are being attacked. Be prepared.
->> Hyacinth: I will get my sword. I am ready. (react = alert, action = pick up, object = none, target = sword)
-
->> Anon: Are you funny?
->> Hyacinth: I like to think so! I try to find the humor in everything, even if it's dark or bitter. (react = normal, action = none, object = none, target = none)
-
->> Anon: Juniper, here I brought you everything you need to win this competition.
->> Juniper: Wow! That is all I needed. Thank you so much. (react = surprised, action = none, object = none, target = none)
-
->> Scillia: Can we visit the dungeons now?
->> Hyacinth: No, we cannot go there at night. (react = headShake, action = none, object = none, target = none)
-
->> Anon: Let us go to the Hovercraft together, Drake!
->> Drake: That's a great idea! (react = victory, action = none, object = none, target = none)
-
->> Anon: Thats a cool sword.
->> Juniper: Thanks. It's made of titanium and it's sharp, dual-edged. Perfect for slicing, stabbing, and jabbing my enemies. (react = normal, action = pick up, object = none, target = sword)
-
->> Hyacinth: Today I lost one of my closest firend in the battle.
->> Anon: I am so sorry to hear it. (react = sad, action = none, object = none, target = none)
-
->> Scillia: Hey Hyacinth, what is your favorite book?
->> Hyacinth: My favorite book is The Lord of the Rings. I love the story and the world that J.R.R. Tolkien created. (react = normal, action = none, object = none, target = none)
-
-${messages.length > 0 ? "Input:\n" : ""}
-${messages
-  .map((m) => {
-    let characterIndex = characters.indexOf(m.speaker);
-    for (let i = 0; i < characters.length; i++) {
-      if (characters[i].name.includes(m.speaker)) {
-        characterIndex = i;
-        break;
-      }
-    }
-    console.log("characterIndex:", characterIndex);
-    if (characterIndex === -1) {
-      return "";
-    }
-
-    // const suffix = `[emote=${m.emote},action=${m.action},object=${m.object},target=${m.target}]`;
-    // return `+${thingHash(m.character, characterIndex)}: ${m.message} ${suffix}`;
-    const suffix = `react=${m.emote ?? "normal"},action=${m.action},object=${
-      m.object
-    },target=${m.target}]`;
-    console.log("m.character", m);
-    return `+${thingHash(characters[characterIndex], characterIndex)}: ${
-      m.message
-    }`;
-  })
-  .join("\n")}
-+${
-  dstCharacter
-    ? `${thingHash(dstCharacter, characters.indexOf(dstCharacter))}:`
-    : ""
-}
-Output:`;
+  ${characterLore}
+  
+  # Setting
+  ${settings.join("\n\n")}
+  
+  ## Characters
+  ${characters
+    .map((c, i) => {
+      return `Id: ${thingHash(c, i)}
+  Name: ${c.name}
+  Bio: ${c.bio}
+  `;
+    })
+    .join("\n\n")}
+  
+  # Objects
+  ${objects.map((o, i) => thingHash(o, i)).join("\n")}
+  
+  # Basic Reactions 
+  Reaction: headShake
+  Description:  When the Character does not agree with what is in the Input.
+  Reaction: headNod
+  Description: When the Character agrees with what is being said in the Input.
+  Reaction: normal
+  Description: When the Character has no emotion attached to the Input.
+  Reaction: sad
+  Description: When the Charcater feels sad or bad about what is in the Input.
+  Reaction: victory
+  Description: When the Character is happy or overjoyed by what is in the Input.
+  Reaction: alert
+  Description: When the Character gets cautious about what is in the Input.
+  Reaction: angry
+  Description: When the Character is not satisfied or angry of what is in the Input.
+  Reaction: embarrased
+  Description: When the Character is ashamed of what is in the Input.
+  Reaction: surprised
+  Description: When the Character did not expect what is in the Input.
+  
+  # Basic Actions 
+  Action: move to
+  Description:  When the Input clearly indicates that a Character needs to move to another Object/Character, use this action.
+  Action: follow
+  Description: When the Input clearly indicates that a Character needs to follow another Character, use this action.
+  Action: pick up
+  Description: When the Input clearly indicates that a Character needs to pick up an Object, use this action.
+  Action: drops
+  Description: When the Input clearly indicates that a Character needs to give an Object to someone, put an Object at some particular place or just simply remove it from their inventory, use this action.
+  Action: none
+  Description: When the Input clearly indicates that there is no need for any action to be taken by a Character, use this action.
+  Action: stop
+  Description: When the Input clearly indicates that a Character has to stop something, use this action.
+  
+  # Examples of How to Parse Inputs
+  Input:
+  +a8e44f13/Scillia#4: Hi Drake! Whats up?.
+  +707fbe84/Drake#3:
+  Output:
+  +707fbe84/Drake#3: I am doing good. How about you? (react = normal, action = follow, object = none, target = scillia#4)
+  Input:
+  +9f493510/Hyacinth#2: What mischief are you upto today?
+  +8c83258d/Anon#1:
+  Output:
+  +8c83258d/Anon#1: None. I have been good all day. (react = headNod, action = none, object = none, target = none)
+  Input:
+  +a8e44f13/Scillia#4: Why did you break that expensive artifact? Now I will have to pay up for the damage.
+  +707fbe84/Drake#3:
+  Output:
+  +707fbe84/Drake#3: I am really sorry about it. (react = embarrassed, action = none, object = none, target = none)
+  Input:
+  +8c83258d/Anon#1: We finally won the battle Juniper!
+  +a6dfd77c/Juniper#5:
+  Output:
+  +a6dfd77c/Juniper#5: Hurray! We did it. (react = victory, action = none, object = none, target = none)
+  Input:
+  +a8e44f13/Scillia#4: I am tired. How far is the dungeon, Hyacinth?
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: Just a bit further, don't worry. (react = normal, action = none, object = none, target = none)
+  Input:
+  +707fbe84/Drake#3: Hyacinth, are you going to visit the Church today?
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: No, I will not go today. (react = headShake, action = none, object = none, target = none)
+  Input:
+  +707fbe84/Drake#3: Hyacinth, are you going to visit the Church today?
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: Yes. I will go now. (react = headNod, action = moveto, object = none, target = church#4)
+  Input:
+  +707fbe84/Drake#3: Hyacinth, we are being attacked. Be prepared.
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: I will get my sword. I am ready. (react = alert, action = pick up, object = none, target = sword#2)
+  Input:
+  +8c83258d/Anon#1: Are you funny?
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: I like to think so! I try to find the humor in everything, even if it's dark or bitter. (react = normal, action = none, object = none, target = none)
+  Input:
+  +8c83258d/Anon#1: Juniper, here I brought you everything you need to win this competition.
+  +a6dfd77c/Juniper#5:
+  Output:
+  +a6dfd77c/Juniper#5: Wow! That is all I needed. Thank you so much. (react = surprised, action = none, object = none, target = none)
+  Input:
+  +a8e44f13/Scillia#4: Can we visit the dungeons now?
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: No, we cannot go there at night. (react = headShake, action = none, object = none, target = none)
+  Input:
+  +8c83258d/Anon#1: Let us go to the Hovercraft together, Drake!
+  +707fbe84/Drake#3:
+  Output:
+  +707fbe84/Drake#3: That's a great idea! (react = victory, action = none, object = none, target = none)
+  Input:
+  +8c83258d/Anon#1: Thats a cool sword.
+  +a6dfd77c/Juniper#5:
+  Output:
+  +a6dfd77c/Juniper#5: Thanks. It's made of titanium and it's sharp, dual-edged. Perfect for slicing, stabbing, and jabbing my enemies. (react = normal, action = pick up, object = none, target = sword#2)
+  Input:
+  +9f493510/Hyacinth#2: Today I lost one of my closest firend in the battle.
+  +8c83258d/Anon#1:
+  Output:
+  +8c83258d/Anon#1: I am so sorry to hear it. (react = sad, action = none, object = none, target = none)
+  Input:
+  +9f493510/Hyacinth#2: Your actions have caused a lot of trouble to others.
+  +a8e44f13/Scillia#4:
+  Output:
+  +a8e44f13/Scillia#4: But I did not do it. (react = angry, action = none, object = none, target = none)
+  Input:
+  +707fbe84/Drake#3: Hyacinth, when was the last time you were here?
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: I haven't been back since my father's funeral. (react = sad, action = none, object = none, target = none)
+  Input:
+  +a8e44f13/Scillia#4: Hey Hyacinth, as soon as we open the barrier, we rush to the site and attack.
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: I am ready. Signal me as soon as the barrier opens. (react = alert, action = follow, object = none, target = none)
+  Input:
+  +8c83258d/Anon#1: Hyacinth want to go on an adventure together??
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: Sure, lets go! (react = headNod, action = none, object = none, target = none)
+  Input:
+  +8c83258d/Anon#1: Would you tell me more about Ironford?
+  +707fbe84/Drake#3:
+  Output:
+  +707fbe84/Drake#3: The city of Ironford was built in the center of a giant forest and is truly a modest marvel. Its allure is matched by the backdrop of lush forests which have helped shape the city to what it is today. (react = headNod, action = none, object = none, target = none)
+  Input:
+  +8c83258d/Anon#1: The monsters have captures the people of the village.
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: I will find and kill each of those monsters myself. (react = angry, action = move to, object = none, target = monster#9)
+  Input:
+  +a8e44f13/Scillia#4: Hey Hyacinth, what is your favorite book?
+  +9f493510/Hyacinth#2:
+  Output:
+  +9f493510/Hyacinth#2: My favorite book is The Lord of the Rings. I love the story and the world that J.R.R. Tolkien created. (react = normal, action = none, object = none, target = none)
+  
+  Input:
+  ${messages
+    .map((m) => {
+      const characterIndex = characters.indexOf(m.character);
+      // const suffix = `[emote=${m.emote},action=${m.action},object=${m.object},target=${m.target}]`;
+      // return `+${thingHash(m.character, characterIndex)}: ${m.message} ${suffix}`;
+      const suffix = `react=${m.emote},action=${m.action},object=${m.object},target=${m.target}]`;
+      return `+${thingHash(m.character, characterIndex)}: ${m.message}`;
+    })
+    .join("\n")}
+  +${
+    dstCharacter
+      ? `${thingHash(dstCharacter, characters.indexOf(dstCharacter))}:`
+      : ""
+  }
+  Output:`;
 
 export const parseLoreResponse = (response) => {
   let match;
@@ -1557,7 +1633,7 @@ Amy: "Well, if you see her can you let me know?  (react = normal)" *END*`;
 
 export const makeChatPrompt = ({
   // name,
-  // description,
+  // bio,
   messages,
   nextCharacter,
 }) => {
@@ -1566,13 +1642,13 @@ export const makeChatPrompt = ({
 ${actionsExamples}
 
 ${messages
-  .map((message, i) => {
-    return `\
-${i % 2 === 0 ? "Input:" : "Output:"}
-${message.name}: ${message.text} (react = ${message.emote || "normal"})`;
+  .map((message) => {
+    return `${message.name}: "${message.text} (react = ${
+      message.emote ? message.emote : "normal"
+    })"`;
   })
   .join("\n")}
-${nextCharacter.name}: "`;
+${nextCharacter}: "`;
 };
 
 export const makeChatStop = () => `\n`;
@@ -1713,16 +1789,68 @@ cry,
 talk,
 yell
 
-John: "What is your name? I'm John (react = normal)"
-Options for John: [ talk ] "END*"
-Jake: "Get away from me! (react = scared)"
-Options for Jake: [ attack, run, cry ] "END*"
-Lizz: "Don't try me (react = angry)"
-Options for Lizz: [ yell, move ]
-Santa Claus: "Ho ho ho, Merry Chistmass (react = happy)"
-Options for Santa Claus: [ move, interact ]
-Yuan: "Can you help me with this? (react = confused)"
-Options for Yuan: [ ask, request help ]`;
+Millie: "Hey, have I seen you around before? (react = surprise)"
+Options for Westley: [No, I don't think so. (react = headShake)], [Yes, I've seen you in class. (react = headNod)]
+Westley: "No, I don't think so. (react = headShake)"
+Millie: "I could have sworn you sit in the row in front of me. (react = normal)"
+
+Gunter: "Have you seen the flowers? They're lovely this time of year."
+Options for Evie: [Yes, I have seen them. (react = headNod)], [No, I haven't seen them. (react = headShake)]
+Evie: "No, I haven't seen them. (react = headShake)."
+Gunter: "Well, then what are we waiting for? Let's go! (react = victory)" *END*
+ 
+Alex: "These enemies are coming at us hard. (react = alert)"
+Options for Jake: [What should we do? (react = alert)], [I'm not sure, I don't know how to fight. (react = sad)]
+Jake: "What should we do? (react = alert)"
+Alex:  "We need to find some cover and regroup. (react = alert)" *END*
+
+Mike: "What happened to the mirror? (react = angry)"
+Options for Amy: [I don't know, I wasn't here when it happened. (react = sad)], [I broke it. (react = embarrassed)]
+Amy: "I broke it. (react = embarrassed)"
+Mike: "That's not good. How are we going to see our reflection now? (react = sad)" *END*
+
+Keith: "Yay! I won. (react = victory)"
+Joe: "Congrats on winning the game (react = victory)"
+Options for Keith: [You're welcome. (react = normal)], [Thanks, I couldn't have done it without you. (react = headNod)]
+Keith: "Thanks, I couldn't have done it without you. (react = headNod)"
+Joe: " I don't know about that. You were the one who made all the calls. Good job! (react = victory)" *END*
+
+Peter: "What are you doing here? (react = surprised)"
+Options for Molly: [I'm lost, I don't know where I am. (react = sad)], [I'm looking for the library. (react = normal)]
+Molly: "I'm lost, I don't know where I am. (react = sad)"
+Peter: "Let me help you, where are you trying to go? (react = normal)" *END*
+
+Kate: "What happened to your house? (react = sad)"
+Jim: "Somebody broke in and trashed the place. (react = anger)"
+Options for Kate: [That's awful, I'm so sorry. (react = sad)], [Do you know who did it? (react = normal)]
+Kate: "Do you know who did it? (react = normal)"
+Jim: "Yes, it was the kids from down the block. (react = anger)"
+Options for Kate: [That's great, now you can call the police and they'll arrest them. (react = victory)], [Do you want me to help you clean up? (react = headNod)]
+Kate: "Do you want me to help you clean up? (react = headNod)"
+Jim: "No, I don't want your help. I can do it myself. (react = headShake)" *END*
+
+Emily: "Let's go to the treehouse (react = normal)"
+Brad: "I don't know, my mom said I'm not allowed to go there. (react = sad)"
+Options for Emily: [Your mom is just being overprotective. Come on, it'll be fun! (react = headShake)], [We'll be careful, I promise. (react = headNod)] 
+Emily: "Your mom is just being overprotective. Come on, it'll be fun! (react = headShake)"
+Brad: "Okay, but if we get in trouble it's your fault. (react = normal)" *END*
+
+Tyler: "I like your sword, can I also have a weapon? (react = normal)"
+Sophie: "Yes, you will need a weapon. You're going to get yourself killed if you go into battle unarmed! (react = anger)" 
+Options for Tyler:[I'll be fine, I know what I'm doing. (react = headShake)], [Okay, give me a sword. (react = headNod)] 
+Tyler: "Okay, give me a sword. (react = headNod)" *END*
+
+Yune: "I challenge you to a duel! (react = angry)"
+Pris: "I'm not dueling you, I don't have time for this. (react = headShake)"
+Options for Yune: [Duel me or face the consequences! (react = angry)],[Fine, let's get this over with. (react = normal)] 
+Yune: "Duel me or face the consequences! (react = angry)"
+Pris: "I don't have time for your games. (react = headShake)" *END*
+
+Jake: "What are you doing?  (react = surprised)"
+Amy: "I'm looking for my cat. Have you seen her?  (react = normal)"
+Options for Jake:[No, I haven't seen your cat. (react =  headShake)], [Yes, I saw your cat go into the treehouse. (react = headNod)] 
+Jake: "No, I haven't seen your cat. (react = headShake)"
+Amy: "Well, if you see her can you let me know?  (react = normal)" *END*`;
 
 export const makeOptionsPrompt = ({
   // name,
@@ -1730,29 +1858,47 @@ export const makeOptionsPrompt = ({
   messages,
   nextCharacter,
 }) => {
+  console.log("messages", messages);
+  console.log("nextCharacter", nextCharacter);
   return `\
 ${actionExamples}
 ${messages
   .map((message) => {
-    return `${message.speaker}: "${message.message} (react = ${
+    return `${message.name}: "${message.text} (react = ${
       message.emote ? message.emote : "normal"
     })"`;
   })
   .join("\n")}
-Options for ${nextCharacter.name}: [`;
+Options for ${nextCharacter}: [`;
 };
 
-export const makeOptionsStop = (name) => [
-  "\n",
-  "\n\n",
-  `${name}:`,
-  `Options for`,
-];
-
+export const makeOptionsStop = () => `\n`;
 export const parseOptionsResponse = (response) => {
-  response = response.replace("]", "").replace('"END*"', "");
-  const tasks = response.split(",").map((task) => task.trim());
-  return tasks;
+  response = "[" + response;
+
+  const options = [];
+  const r = /\s*\[(.*?)\(react\s*=\s*([\s\S]*?)\)\s*\]\s*/g;
+  let match;
+  while ((match = r.exec(response))) {
+    const option = match[1];
+
+    // Parsing the emotion from the list of options.
+    const emote = match[2];
+    console.log("Emotions in Options: ", emote);
+
+    // Passing both text respons and emotes
+    options.push({
+      message: option,
+      emote: emote,
+    });
+  }
+
+  const done = options.length === 0;
+
+  return {
+    value: options,
+    done,
+  };
 };
 
 export async function generateDialogueOptions(
