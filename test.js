@@ -845,7 +845,7 @@ const run = async () => {
   // ********** LORE GENERATION **********
   async function generateLoreTest() {
     const input = {
-      locations: testData.locations,
+      settings: testData.locations,
       characters: [...testData.party, ...testData.npcs],
       messages: testData.messages,
       objects: testData.objects,
