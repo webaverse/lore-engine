@@ -397,13 +397,13 @@ ${objects.length > 0 && "# Objects\n\n"}\
 ${
   objects
     .slice(0, 2)
-    .map((c) => `"${c.name}" ${c.description}`)
+    .map((c) => `"${c.name}" ${c.bio}`)
     .join("\n\n") + (objects.length > 0 && "\n")
 }\
 
 ${characters.length > 0 && "# Characters\n"}\
 ${
-  characters.map((c) => `"${c.name}" ${c.description}`).join("\n") +
+  characters.map((c) => `"${c.name}" ${c.bio}`).join("\n") +
   (characters.length > 0 && "\n")
 }\
 (TASK) Using ${
@@ -612,12 +612,12 @@ ${objects.length > 0 && "# Nearby Objects\n"}\
 ${
   objects
     .slice(0, 2)
-    .map((c) => `"${c.name}" ${c.description}`)
+    .map((c) => `"${c.name}" ${c.bio}`)
     .join("\n\n") + (objects.length > 0 && "\n")
 }\
 ${characters.length > 0 && "# Characters\n"}\
 ${
-  characters.map((c) => `"${c.name}" ${c.description}`).join("\n\n") +
+  characters.map((c) => `"${c.name}" ${c.bio}`).join("\n\n") +
   (characters.length > 0 && "\n\n")
 }
 
@@ -784,16 +784,16 @@ ${objects.length > 0 && "# Nearby Objects\n"}\
 ${
   objects
     .slice(0, 2)
-    .map((c) => `"${c.name}" ${c.description}`)
+    .map((c) => `"${c.name}" ${c.bio}`)
     .join("\n\n") + (objects.length > 0 && "\n")
 }\
 ${characters.length > 0 && "# Characters\n"}\
 ${
-  characters.map((c) => `"${c.name}" ${c.description}`).join("\n\n") +
+  characters.map((c) => `"${c.name}" ${c.bio}`).join("\n\n") +
   (characters.length > 0 && "\n")
 }
 # Target Character
-"${dstCharacter.name}" ${dstCharacter.description}
+"${dstCharacter.name}" ${dstCharacter.bio}
 
 (TASK) Using ${
     objects && objects.length > 0 && objects.map((o) => o.name).join(", ")
@@ -2127,7 +2127,7 @@ export const makeLoreFilePrompt = ({
   ${
     party
       .map(
-        (c) => `Name: ${c.name}\nDescription: ${c.description || c.description}`
+        (c) => `Name: ${c.name}\nDescription: ${c.bio || c.bio}`
       )
       .join("\n\n") + (party.length > 0 && "\n\n")
   }\
@@ -2135,14 +2135,14 @@ export const makeLoreFilePrompt = ({
   ${
     npcs
       .map(
-        (c) => `Name: ${c.name}\nDescription: ${c.description || c.description}`
+        (c) => `Name: ${c.name}\nDescription: ${c.bio || c.bio}`
       )
       .join("\n\n") + (npcs.length > 0 && "\n\n")
   }\
   ${objects.length > 0 && "# Nearby Objects\n\n"}\
   ${
     objects
-      .map((c) => `Name: ${c.name}\nDescription: ${c.description}`)
+      .map((c) => `Name: ${c.name}\nDescription: ${c.bio}`)
       .join("\n\n") + (objects.length > 0 && "\n")
   }\
   
@@ -2316,7 +2316,7 @@ ${characters.length > 0 && "\n# Characters" + "\n\n"}\
 ${characters
   .map(
     (c) =>
-      `${c.name}\n${c.description || c.description}\n${
+      `${c.name}\n${c.bio || c.bio}\n${
         c.Inventory?.length > 0 && `Inventory:\n`
       }${(c.Inventory ? c.Inventory : [])
         .map((obj) => `${obj.name}`)
